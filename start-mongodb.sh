@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 
 # Map input values from the GitHub Actions workflow to shell variables
 MONGODB_VERSION=${1}
