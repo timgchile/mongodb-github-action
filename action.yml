@@ -1,5 +1,5 @@
 name: 'MongoDB in GitHub Actions'
-description: 'Start a MongoDB server (on default port 27017 or a custom port)'
+description: 'Start a MongoDB server (on default port 27017 or a custom port) with availability to set username and password as well as a replicaset'
 
 branding:
   icon: 'database'
@@ -21,6 +21,16 @@ inputs:
     required: false
     default: 27017
 
+  mongodb-root-username:
+    description: 'MongoDB root username (default empty)'
+    required: false
+    default: ''
+
+  mongodb-root-password:
+    description: 'MongoDB root password (default empty)'
+    required: false
+    default: ''
+
 runs:
   using: 'docker'
   image: 'Dockerfile'
@@ -28,3 +38,5 @@ runs:
     - ${{ inputs.mongodb-version }}
     - ${{ inputs.mongodb-replica-set }}
     - ${{ inputs.mongodb-port }}
+    - ${{ inputs.mongodb-root-username }}
+    - ${{ inputs.mongodb-root-password }}
