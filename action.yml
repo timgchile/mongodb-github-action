@@ -1,5 +1,5 @@
-name: 'MongoDB in GitHub Actions'
-description: 'Start a MongoDB server (on default port 27017 or a custom port) with availability to set username and password as well as a replicaset'
+name: 'MongoDB for GitHub Actions'
+description: 'Start a MongoDB server with configurable options'
 
 branding:
   icon: 'database'
