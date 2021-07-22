@@ -31,12 +31,10 @@ if [ -z "${MONGODB_REPLICA_SET}" ]; then
     docker run --name mongodb --publish "${MONGODB_PORT}":27017 --detach mongo:"${MONGODB_VERSION}" --MONGO_INITDB_ROOT_USERNAME="${MONGO_INITDB_ROOT_USERNAME}" --MONGO_INITDB_ROOT_PASSWORD="${MONGO_INITDB_ROOT_PASSWORD}"
   fi
 
-  docker ps
-  docker logs mongodb
   if [ -z "${MONGO_INITDB_ROOT_USERNAME}" ]; then
-    docker run --name mongodbtest --network host --rm mongo --host localhost --port "${MONGODB_PORT}"
+    docker run --name mongodbtest --network host --rm mongo:"${MONGODB_VERSION}" mongo --host localhost --port "${MONGODB_PORT}"
   else
-    docker run --name mongodbtest --network host --rm mongo --host localhost --port "${MONGODB_PORT}" --username "${MONGO_INITDB_ROOT_USERNAME}" --password "${MONGO_INITDB_ROOT_PASSWORD}"
+    docker run --name mongodbtest --network host --rm mongo:"${MONGODB_VERSION}" mongo --host localhost --port "${MONGODB_PORT}" --username "${MONGO_INITDB_ROOT_USERNAME}" --password "${MONGO_INITDB_ROOT_PASSWORD}"
   fi
 
   echo "::endgroup::"
