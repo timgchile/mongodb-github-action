@@ -29,7 +29,7 @@ if [ -z "${MONGODB_REPLICA_SET}" ]; then
   if [ -z "${MONGO_ROOT_USERNAME}" ]; then
     docker run --name mongodb --publish "${MONGODB_PORT}":27017 --detach mongo:"${MONGODB_VERSION}"
   else
-    docker run --name mongodb --publish "${MONGODB_PORT}":27017 --detach mongo:"${MONGODB_VERSION}" --MONGO_INITDB_ROOT_USERNAME="${MONGO_ROOT_USERNAME}" --MONGO_INITDB_ROOT_PASSWORD="${MONGO_ROOT_PASSWORD}"
+    docker run --name mongodb --publish "${MONGODB_PORT}":27017 --detach mongo:"${MONGODB_VERSION}" -e MONGO_INITDB_ROOT_USERNAME="${MONGO_ROOT_USERNAME}" -e MONGO_INITDB_ROOT_PASSWORD="${MONGO_ROOT_PASSWORD}"
   fi
 
   echo "::group::Waiting for MongoDB to accept connections"
@@ -80,7 +80,7 @@ echo ""
 if [ -z "${MONGO_ROOT_USERNAME}" ]; then
   docker run --name mongodb --publish "${MONGODB_PORT}":"${MONGODB_PORT}" --detach mongo:"${MONGODB_VERSION}" mongod --replSet "${MONGODB_REPLICA_SET}" --port "${MONGODB_PORT}"
 else
-  docker run --name mongodb --publish "${MONGODB_PORT}":"${MONGODB_PORT}" --detach mongo:"${MONGODB_VERSION}" mongod --replSet "${MONGODB_REPLICA_SET}" --port "${MONGODB_PORT}" --MONGO_INITDB_ROOT_USERNAME="${MONGO_ROOT_USERNAME}" --MONGO_INITDB_ROOT_PASSWORD="${MONGO_ROOT_PASSWORD}"
+  docker run --name mongodb --publish "${MONGODB_PORT}":"${MONGODB_PORT}" --detach mongo:"${MONGODB_VERSION}" mongod --replSet "${MONGODB_REPLICA_SET}" --port "${MONGODB_PORT}" -e MONGO_INITDB_ROOT_USERNAME="${MONGO_ROOT_USERNAME}" -e MONGO_INITDB_ROOT_PASSWORD="${MONGO_ROOT_PASSWORD}"
 fi
 echo "::endgroup::"
 
