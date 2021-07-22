@@ -24,7 +24,7 @@ if [ -z "${MONGODB_REPLICA_SET}" ]; then
   if [ "${MONGODB_ROOT_USERNAME}" != "" ]; then
     echo "  - username [${MONGODB_ROOT_USERNAME}]"
     echo "  - password [${MONGODB_ROOT_PASSWORD}]"
-    AUTH_PARAMETERS=" --username ${MONGODB_ROOT_USERNAME} --password ${MONGODB_ROOT_PASSWORD}"
+    AUTH_PARAMETERS="--username ${MONGODB_ROOT_USERNAME} --password ${MONGODB_ROOT_PASSWORD}"
   fi
   echo ""
   echo "::endgroup::"
