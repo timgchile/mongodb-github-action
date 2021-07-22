@@ -4,8 +4,10 @@
 MONGODB_VERSION=${1}
 MONGODB_REPLICA_SET=${2}
 MONGODB_PORT=${3}
-MONGO_ROOT_USERNAME=${4}
-MONGO_ROOT_PASSWORD=${5}
+MONGODB_ROOT_USERNAME=${4}
+MONGODB_ROOT_PASSWORD=${5}
+
+AUTH_PARAMETERS=""
 
 if [ -z "${MONGODB_VERSION}" ]; then
   echo ""
@@ -19,27 +21,26 @@ if [ -z "${MONGODB_REPLICA_SET}" ]; then
   echo "::group::Starting single-node instance, no replica set"
   echo "  - port [${MONGODB_PORT}]"
   echo "  - version [${MONGODB_VERSION}]"
-  if [ "${MONGO_ROOT_USERNAME}" != "" ]; then
-    echo "  - username [${MONGO_ROOT_USERNAME}]"
-    echo "  - password [${MONGO_ROOT_PASSWORD}]"
+  if [ "${MONGODB_ROOT_USERNAME}" != "" ]; then
+    echo "  - username [${MONGODB_ROOT_USERNAME}]"
+    echo "  - password [${MONGODB_ROOT_PASSWORD}]"
+    AUTH_PARAMETERS=" --username ${MONGODB_ROOT_USERNAME} --password ${MONGODB_ROOT_PASSWORD}"
   fi
   echo ""
   echo "::endgroup::"
 
-  if [ -z "${MONGO_ROOT_USERNAME}" ]; then
+  if [ -z "${MONGODB_ROOT_USERNAME}" ]; then
     docker run --name mongodb --publish "${MONGODB_PORT}":27017 --detach mongo:"${MONGODB_VERSION}"
   else
-    docker run --name mongodb --publish "${MONGODB_PORT}":27017 --detach --env MONGO_INITDB_ROOT_USERNAME="${MONGO_ROOT_USERNAME}" --env MONGO_INITDB_ROOT_PASSWORD="${MONGO_ROOT_PASSWORD}" mongo:"${MONGODB_VERSION}"
+    docker run --name mongodb --publish "${MONGODB_PORT}":27017 --detach --env MONGO_INITDB_ROOT_USERNAME="${MONGODB_ROOT_USERNAME}" --env MONGO_INITDB_ROOT_PASSWORD="${MONGODB_ROOT_PASSWORD}" mongo:"${MONGODB_VERSION}"
   fi
 
   echo "::group::Waiting for MongoDB to accept connections"
   sleep 1
   TIMER=0
 
-  until docker exec --tty mongodb mongo --port "${MONGODB_PORT}" --eval "db.serverStatus()" # &> /dev/null
+  until docker exec --tty mongodb mongo --port "${MONGODB_PORT}" "${AUTH_PARAMETERS}" --eval "db.serverStatus()" # &> /dev/null
   do
-    docker ps -a
-    docker logs mongodb
     sleep 1
     echo "."
     TIMER=$((TIMER + 1))
@@ -52,15 +53,9 @@ if [ -z "${MONGODB_REPLICA_SET}" ]; then
   echo "::endgroup::"
 
   echo "::group::Testing connection to database"
-  if [ -z "${MONGO_ROOT_USERNAME}" ]; then
-    docker exec --tty mongodb mongo --port "${MONGODB_PORT}" --eval "
-      db.getCollectionInfos()
-    " test
-  else
-    docker exec --tty mongodb mongo --port "${MONGODB_PORT}" --username "${MONGO_ROOT_USERNAME}" --password "${MONGO_ROOT_PASSWORD}" --eval "
-      db.getCollectionInfos()
-    " test
-  fi
+  docker exec --tty mongodb mongo --port "${MONGODB_PORT}" "${AUTH_PARAMETERS}" --eval "
+    db.getCollectionInfos()
+  " test
   echo ""
   echo "::endgroup::"
 
@@ -71,16 +66,16 @@ echo "::group::Starting MongoDB as single-node replica set"
 echo "  - port [${MONGODB_PORT}]"
 echo "  - version [${MONGODB_VERSION}]"
 echo "  - replica set [${MONGODB_REPLICA_SET}]"
-if [ "${MONGO_ROOT_USERNAME}" != "" ]; then
-  echo "  - username [${MONGO_ROOT_USERNAME}]"
-  echo "  - password [${MONGO_ROOT_PASSWORD}]"
+if [ "${MONGODB_ROOT_USERNAME}" != "" ]; then
+  echo "  - username [${MONGODB_ROOT_USERNAME}]"
+  echo "  - password [${MONGODB_ROOT_PASSWORD}]"
 fi
 echo ""
 
-if [ -z "${MONGO_ROOT_USERNAME}" ]; then
+if [ -z "${MONGODB_ROOT_USERNAME}" ]; then
   docker run --name mongodb --publish "${MONGODB_PORT}":"${MONGODB_PORT}" --detach mongo:"${MONGODB_VERSION}" mongod --replSet "${MONGODB_REPLICA_SET}" --port "${MONGODB_PORT}"
 else
-  docker run --name mongodb --publish "${MONGODB_PORT}":"${MONGODB_PORT}" --detach mongo:"${MONGODB_VERSION}" --env MONGO_INITDB_ROOT_USERNAME="${MONGO_ROOT_USERNAME}" --env MONGO_INITDB_ROOT_PASSWORD="${MONGO_ROOT_PASSWORD}" mongod --replSet "${MONGODB_REPLICA_SET}" --port "${MONGODB_PORT}"
+  docker run --name mongodb --publish "${MONGODB_PORT}":"${MONGODB_PORT}" --detach mongo:"${MONGODB_VERSION}" --env MONGO_INITDB_ROOT_USERNAME="${MONGODB_ROOT_USERNAME}" --env MONGO_INITDB_ROOT_PASSWORD="${MONGODB_ROOT_PASSWORD}" mongod --replSet "${MONGODB_REPLICA_SET}" --port "${MONGODB_PORT}"
 fi
 echo "::endgroup::"
 
@@ -88,7 +83,7 @@ echo "::group::Waiting for MongoDB to accept connections"
 sleep 1
 TIMER=0
 
-until docker exec --tty mongodb mongo --port "${MONGODB_PORT}" --eval "db.serverStatus()" # &> /dev/null
+until docker exec --tty mongodb mongo --port "${MONGODB_PORT}" "${AUTH_PARAMETERS}" --eval "db.serverStatus()" # &> /dev/null
 do
   sleep 1
   echo "."
@@ -103,7 +98,7 @@ echo "::endgroup::"
 
 echo "::group::Initiating replica set [${MONGODB_REPLICA_SET}]"
 
-docker exec --tty mongodb mongo --port "${MONGODB_PORT}" --eval "
+docker exec --tty mongodb mongo --port "${MONGODB_PORT}" "${AUTH_PARAMETERS}" --eval "
   rs.initiate({
     \"_id\": \"${MONGODB_REPLICA_SET}\",
     \"members\": [ {
@@ -117,7 +112,7 @@ echo "Success! Initiated replica set [${MONGODB_REPLICA_SET}]"
 echo "::endgroup::"
 
 echo "::group::Checking replica set status [${MONGODB_REPLICA_SET}]"
-docker exec --tty mongodb mongo --port "${MONGODB_PORT}" --eval "
+docker exec --tty mongodb mongo --port "${MONGODB_PORT}" "${AUTH_PARAMETERS}" --eval "
   rs.status()
 "
 echo "::endgroup::"
