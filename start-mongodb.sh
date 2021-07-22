@@ -6,7 +6,6 @@ MONGODB_REPLICA_SET=${2}
 MONGODB_PORT=${3}
 MONGO_ROOT_USERNAME=${4}
 MONGO_ROOT_PASSWORD=${5}
-TEST_CONNECTION=${6}
 
 if [ -z "${MONGODB_VERSION}" ]; then
   echo ""
@@ -33,20 +32,35 @@ if [ -z "${MONGODB_REPLICA_SET}" ]; then
     docker run --name mongodb --publish "${MONGODB_PORT}":27017 --detach mongo:"${MONGODB_VERSION}" --MONGO_INITDB_ROOT_USERNAME="${MONGO_ROOT_USERNAME}" --MONGO_INITDB_ROOT_PASSWORD="${MONGO_ROOT_PASSWORD}"
   fi
 
-  if [ "${TEST_CONNECTION}" ]; then
-    echo "::group::Testing connection to database"
-    if [ -z "${MONGO_ROOT_USERNAME}" ]; then
-      docker exec --tty mongodb mongo --port "${MONGODB_PORT}" --eval "
-        db.listCollections()
-      " test
-    else
-      docker exec --tty mongodb mongo --port "${MONGODB_PORT}" --username "${MONGO_ROOT_USERNAME}" --password "${MONGO_ROOT_PASSWORD}" --eval "
-        db.listCollections()
-      " test
+  echo "::group::Waiting for MongoDB to accept connections"
+  sleep 1
+  TIMER=0
+
+  until docker exec --tty mongodb mongo --port "${MONGODB_PORT}" --eval "db.serverStatus()" # &> /dev/null
+  do
+    sleep 1
+    echo "."
+    TIMER=$((TIMER + 1))
+
+    if [[ ${TIMER} -eq 20 ]]; then
+      echo "MongoDB did not initialize within 20 seconds. Exiting."
+      exit 2
     fi
-    echo ""
-    echo "::endgroup::"
+  done
+  echo "::endgroup::"
+
+  echo "::group::Testing connection to database"
+  if [ -z "${MONGO_ROOT_USERNAME}" ]; then
+    docker exec --tty mongodb mongo --port "${MONGODB_PORT}" --eval "
+      db.listCollections()
+    " test
+  else
+    docker exec --tty mongodb mongo --port "${MONGODB_PORT}" --username "${MONGO_ROOT_USERNAME}" --password "${MONGO_ROOT_PASSWORD}" --eval "
+      db.listCollections()
+    " test
   fi
+  echo ""
+  echo "::endgroup::"
 
   return
 fi

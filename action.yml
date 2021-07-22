@@ -31,11 +31,6 @@ inputs:
     required: false
     default: ''
 
-  mongodb-test-connection:
-    description: 'MongoDB test connection (default false)'
-    required: false
-    default: false
-
 runs:
   using: 'docker'
   image: 'Dockerfile'
