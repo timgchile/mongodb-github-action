@@ -39,7 +39,7 @@ if [ -z "${MONGODB_REPLICA_SET}" ]; then
   sleep 1
   TIMER=0
 
-  until docker exec --tty mongodb mongo --port "${MONGODB_PORT}" "${AUTH_PARAMETERS}" --eval "db.serverStatus()" # &> /dev/null
+  until docker exec --tty mongodb mongo --port "${MONGODB_PORT}" ${AUTH_PARAMETERS} --eval "db.serverStatus()"
   do
     sleep 1
     echo "."
@@ -53,7 +53,7 @@ if [ -z "${MONGODB_REPLICA_SET}" ]; then
   echo "::endgroup::"
 
   echo "::group::Testing connection to database"
-  docker exec --tty mongodb mongo --port "${MONGODB_PORT}" "${AUTH_PARAMETERS}" --eval "
+  docker exec --tty mongodb mongo --port "${MONGODB_PORT}" ${AUTH_PARAMETERS} --eval "
     db.getCollectionInfos()
   " test
   echo ""
@@ -83,7 +83,7 @@ echo "::group::Waiting for MongoDB to accept connections"
 sleep 1
 TIMER=0
 
-until docker exec --tty mongodb mongo --port "${MONGODB_PORT}" "${AUTH_PARAMETERS}" --eval "db.serverStatus()" # &> /dev/null
+until docker exec --tty mongodb mongo --port "${MONGODB_PORT}" ${AUTH_PARAMETERS} --eval "db.serverStatus()"
 do
   sleep 1
   echo "."
@@ -98,7 +98,7 @@ echo "::endgroup::"
 
 echo "::group::Initiating replica set [${MONGODB_REPLICA_SET}]"
 
-docker exec --tty mongodb mongo --port "${MONGODB_PORT}" "${AUTH_PARAMETERS}" --eval "
+docker exec --tty mongodb mongo --port "${MONGODB_PORT}" ${AUTH_PARAMETERS} --eval "
   rs.initiate({
     \"_id\": \"${MONGODB_REPLICA_SET}\",
     \"members\": [ {
@@ -107,12 +107,11 @@ docker exec --tty mongodb mongo --port "${MONGODB_PORT}" "${AUTH_PARAMETERS}" --
     } ]
   })
 "
-
 echo "Success! Initiated replica set [${MONGODB_REPLICA_SET}]"
 echo "::endgroup::"
 
 echo "::group::Checking replica set status [${MONGODB_REPLICA_SET}]"
-docker exec --tty mongodb mongo --port "${MONGODB_PORT}" "${AUTH_PARAMETERS}" --eval "
+docker exec --tty mongodb mongo --port "${MONGODB_PORT}" ${AUTH_PARAMETERS} --eval "
   rs.status()
 "
 echo "::endgroup::"
