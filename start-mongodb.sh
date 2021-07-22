@@ -33,13 +33,13 @@ if [ -z "${MONGODB_REPLICA_SET}" ]; then
   fi
 
   echo "::group::Waiting for MongoDB to accept connections"
-  docker ps
-  docker logs mongodb
   sleep 1
   TIMER=0
 
   until docker exec --tty mongodb mongo --port "${MONGODB_PORT}" --eval "db.serverStatus()" # &> /dev/null
   do
+    docker ps -a
+    docker logs mongodb
     sleep 1
     echo "."
     TIMER=$((TIMER + 1))
@@ -54,7 +54,7 @@ if [ -z "${MONGODB_REPLICA_SET}" ]; then
   echo "::group::Testing connection to database"
   if [ -z "${MONGO_ROOT_USERNAME}" ]; then
     docker exec --tty mongodb mongo --port "${MONGODB_PORT}" --eval "
-      db.listCollections()
+      db.getCollectionInfos()
     " test
   else
     docker exec --tty mongodb mongo --port "${MONGODB_PORT}" --username "${MONGO_ROOT_USERNAME}" --password "${MONGO_ROOT_PASSWORD}" --eval "
