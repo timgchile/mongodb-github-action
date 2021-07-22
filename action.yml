@@ -31,6 +31,11 @@ inputs:
     required: false
     default: ''
 
+  mongodb-test-connection:
+    description: 'MongoDB test connection (default false)'
+    required: false
+    default: false
+
 runs:
   using: 'docker'
   image: 'Dockerfile'
@@ -40,3 +45,4 @@ runs:
     - ${{ inputs.mongodb-port }}
     - ${{ inputs.mongodb-root-username }}
     - ${{ inputs.mongodb-root-password }}
+    - ${{ inputs.mongodb-test-connection }}

@@ -4,8 +4,9 @@
 MONGODB_VERSION=${1}
 MONGODB_REPLICA_SET=${2}
 MONGODB_PORT=${3}
-MONGO_INITDB_ROOT_USERNAME=${4}
-MONGO_INITDB_ROOT_PASSWORD=${5}
+MONGO_ROOT_USERNAME=${4}
+MONGO_ROOT_PASSWORD=${5}
+TEST_CONNECTION=${6}
 
 if [ -z "${MONGODB_VERSION}" ]; then
   echo ""
@@ -19,25 +20,33 @@ if [ -z "${MONGODB_REPLICA_SET}" ]; then
   echo "::group::Starting single-node instance, no replica set"
   echo "  - port [${MONGODB_PORT}]"
   echo "  - version [${MONGODB_VERSION}]"
-  if [ "${MONGO_INITDB_ROOT_USERNAME}" != "" ]; then
-    echo "  - username [${MONGO_INITDB_ROOT_USERNAME}]"
-    echo "  - password [${MONGO_INITDB_ROOT_PASSWORD}]"
+  if [ "${MONGO_ROOT_USERNAME}" != "" ]; then
+    echo "  - username [${MONGO_ROOT_USERNAME}]"
+    echo "  - password [${MONGO_ROOT_PASSWORD}]"
   fi
   echo ""
+  echo "::endgroup::"
 
-  if [ -z "${MONGO_INITDB_ROOT_USERNAME}" ]; then
+  if [ -z "${MONGO_ROOT_USERNAME}" ]; then
     docker run --name mongodb --publish "${MONGODB_PORT}":27017 --detach mongo:"${MONGODB_VERSION}"
   else
-    docker run --name mongodb --publish "${MONGODB_PORT}":27017 --detach mongo:"${MONGODB_VERSION}" --MONGO_INITDB_ROOT_USERNAME="${MONGO_INITDB_ROOT_USERNAME}" --MONGO_INITDB_ROOT_PASSWORD="${MONGO_INITDB_ROOT_PASSWORD}"
+    docker run --name mongodb --publish "${MONGODB_PORT}":27017 --detach mongo:"${MONGODB_VERSION}" --MONGO_INITDB_ROOT_USERNAME="${MONGO_ROOT_USERNAME}" --MONGO_INITDB_ROOT_PASSWORD="${MONGO_ROOT_PASSWORD}"
   fi
 
-  if [ -z "${MONGO_INITDB_ROOT_USERNAME}" ]; then
-    docker run --name mongodbtest --network host --rm mongo:"${MONGODB_VERSION}" mongo --host localhost --port "${MONGODB_PORT}"
-  else
-    docker run --name mongodbtest --network host --rm mongo:"${MONGODB_VERSION}" mongo --host localhost --port "${MONGODB_PORT}" --username "${MONGO_INITDB_ROOT_USERNAME}" --password "${MONGO_INITDB_ROOT_PASSWORD}"
+  if [ "${TEST_CONNECTION}" ]; then
+    echo "::group::Testing connection to database"
+    if [ -z "${MONGO_ROOT_USERNAME}" ]; then
+      docker exec --tty mongodb mongo --port "${MONGODB_PORT}" --eval "
+        db.listCollections()
+      " test
+    else
+      docker exec --tty mongodb mongo --port "${MONGODB_PORT}" --username "${MONGO_ROOT_USERNAME}" --password "${MONGO_ROOT_PASSWORD}" --eval "
+        db.listCollections()
+      " test
+    fi
+    echo ""
+    echo "::endgroup::"
   fi
-
-  echo "::endgroup::"
 
   return
 fi
@@ -46,12 +55,16 @@ echo "::group::Starting MongoDB as single-node replica set"
 echo "  - port [${MONGODB_PORT}]"
 echo "  - version [${MONGODB_VERSION}]"
 echo "  - replica set [${MONGODB_REPLICA_SET}]"
+if [ "${MONGO_ROOT_USERNAME}" != "" ]; then
+  echo "  - username [${MONGO_ROOT_USERNAME}]"
+  echo "  - password [${MONGO_ROOT_PASSWORD}]"
+fi
 echo ""
 
-if [ -z "${MONGO_INITDB_ROOT_USERNAME}" ]; then
+if [ -z "${MONGO_ROOT_USERNAME}" ]; then
   docker run --name mongodb --publish "${MONGODB_PORT}":"${MONGODB_PORT}" --detach mongo:"${MONGODB_VERSION}" mongod --replSet "${MONGODB_REPLICA_SET}" --port "${MONGODB_PORT}"
 else
-  docker run --name mongodb --publish "${MONGODB_PORT}":"${MONGODB_PORT}" --detach mongo:"${MONGODB_VERSION}" mongod --replSet "${MONGODB_REPLICA_SET}" --port "${MONGODB_PORT}" --MONGO_INITDB_ROOT_USERNAME="${MONGO_INITDB_ROOT_USERNAME}" --MONGO_INITDB_ROOT_PASSWORD="${MONGO_INITDB_ROOT_PASSWORD}"
+  docker run --name mongodb --publish "${MONGODB_PORT}":"${MONGODB_PORT}" --detach mongo:"${MONGODB_VERSION}" mongod --replSet "${MONGODB_REPLICA_SET}" --port "${MONGODB_PORT}" --MONGO_INITDB_ROOT_USERNAME="${MONGO_ROOT_USERNAME}" --MONGO_INITDB_ROOT_PASSWORD="${MONGO_ROOT_PASSWORD}"
 fi
 echo "::endgroup::"
 
