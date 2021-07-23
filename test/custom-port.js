@@ -2,9 +2,9 @@
 
 const Lab = require('@hapi/lab')
 const Mongoose = require('mongoose')
-const {expect} = require('@hapi/code')
-const {describe, it} = (exports.lab = Lab.script())
-const {MONGODB_PORT = 27017, MONGODB_USERNAME = null, MONGODB_PASSWORD = null} = process.env
+const { expect } = require('@hapi/code')
+const { describe, it } = (exports.lab = Lab.script())
+const { MONGODB_PORT = 27017, MONGODB_USERNAME = null, MONGODB_PASSWORD = null } = process.env
 
 if (null == MONGODB_USERNAME) {
   describe('MongoDB Instance on Custom Port ->', () => {
