@@ -34,41 +34,6 @@ jobs:
         env:
           MONGODB_REPLICA_SET: mongodb-test-rs
 
-  single-node-replica-set-with-credentials:
-    name: MongoDB v${{ matrix.mongodb-version }} RS on default port with credentials
-
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        mongodb-version: ['4.0', '4.2', '4.4', '5.0']
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Start MongoDB Server v${{ matrix.mongodb-version }}
-        uses: ./
-        with:
-          mongodb-version: ${{ matrix.mongodb-version }}
-          mongodb-replica-set: mongodb-test-rs
-          mongodb-root-username: admin
-          mongodb-root-password: admin
-
-      - name: Setup NodeJS
-        uses: actions/setup-node@v1
-        with:
-          node-version: 16
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Run tests
-        run: npm test ./test/replica-set.js
-        env:
-          MONGODB_REPLICA_SET: mongodb-test-rs
-          MONGODB_USERNAME: admin
-          MONGODB_PASSWORD: admin
-
   single-node-replica-set-on-custom-port:
     runs-on: ubuntu-latest
     strategy:
@@ -100,39 +65,3 @@ jobs:
         env:
           MONGODB_PORT: 12345
           MONGODB_REPLICA_SET: mongodb-test-rs
-
-  single-node-replica-set-on-custom-port-with-credentials:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        mongodb-version: ['4.0', '4.2', '4.4', '5.0']
-
-    name: MongoDB v${{ matrix.mongodb-version }} RS on custom port with credentials
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Start MongoDB Server v${{ matrix.mongodb-version }}
-        uses: ./
-        with:
-          mongodb-port: 12345
-          mongodb-version: ${{ matrix.mongodb-version }}
-          mongodb-replica-set: mongodb-test-rs
-          mongodb-root-username: admin
-          mongodb-root-password: admin
-
-      - name: Setup NodeJS
-        uses: actions/setup-node@v1
-        with:
-          node-version: 16
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Run tests
-        run: npm test ./test/replica-set.js
-        env:
-          MONGODB_PORT: 12345
-          MONGODB_REPLICA_SET: mongodb-test-rs
-          MONGODB_USERNAME: admin
-          MONGODB_PASSWORD: admin
