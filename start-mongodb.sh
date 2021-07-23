@@ -30,9 +30,9 @@ if [ -z "${MONGODB_REPLICA_SET}" ]; then
   echo "::endgroup::"
 
   if [ -z "${MONGODB_ROOT_USERNAME}" ]; then
-    docker run --name mongodb --publish "${MONGODB_PORT}":27017 --detach mongo:"${MONGODB_VERSION}"
+    docker run --name mongodb --publish "${MONGODB_PORT}":"${MONGODB_PORT}" --detach mongo:"${MONGODB_VERSION}" --port "${MONGODB_PORT}"
   else
-    docker run --name mongodb --publish "${MONGODB_PORT}":27017 --detach --env MONGO_INITDB_ROOT_USERNAME="${MONGODB_ROOT_USERNAME}" --env MONGO_INITDB_ROOT_PASSWORD="${MONGODB_ROOT_PASSWORD}" mongo:"${MONGODB_VERSION}"
+    docker run --name mongodb --publish "${MONGODB_PORT}":"${MONGODB_PORT}" --detach --env MONGO_INITDB_ROOT_USERNAME="${MONGODB_ROOT_USERNAME}" --env MONGO_INITDB_ROOT_PASSWORD="${MONGODB_ROOT_PASSWORD}" mongo:"${MONGODB_VERSION}" --port "${MONGODB_PORT}"
   fi
 
   echo "::group::Waiting for MongoDB to accept connections"

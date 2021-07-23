@@ -4,13 +4,12 @@ on: [push, pull_request]
 
 jobs:
   single-node-replica-set-on-default-port:
-    name: MongoDB RS on default port v${{ matrix.mongodb-version }} — Node.js v${{ matrix.node-version }}
+    name: MongoDB v${{ matrix.mongodb-version }} RS on default port
 
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [12, 14, 16]
-        mongodb-version: ['4.0', '4.2', '4.4']
+        mongodb-version: ['4.0', '4.2', '4.4', '5.0']
 
     steps:
       - name: Checkout
@@ -22,10 +21,10 @@ jobs:
           mongodb-version: ${{ matrix.mongodb-version }}
           mongodb-replica-set: mongodb-test-rs
 
-      - name: Use Node.js ${{ matrix.node-version }}
+      - name: Setup NodeJS
         uses: actions/setup-node@v1
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 16
 
       - name: Install dependencies
         run: npm install
@@ -33,17 +32,15 @@ jobs:
       - name: Run tests
         run: npm test ./test/replica-set.js
         env:
-          CI: true
           MONGODB_REPLICA_SET: mongodb-test-rs
 
   single-node-replica-set-with-credentials:
-    name: MongoDB RS on default port v${{ matrix.mongodb-version }} — Node.js v${{ matrix.node-version }} with credentials
+    name: MongoDB v${{ matrix.mongodb-version }} RS on default port with credentials
 
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [12, 14, 16]
-        mongodb-version: ['4.0', '4.2', '4.4']
+        mongodb-version: ['4.0', '4.2', '4.4', '5.0']
 
     steps:
       - name: Checkout
@@ -57,10 +54,10 @@ jobs:
           mongodb-root-username: admin
           mongodb-root-password: admin
 
-      - name: Use Node.js ${{ matrix.node-version }}
+      - name: Setup NodeJS
         uses: actions/setup-node@v1
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 16
 
       - name: Install dependencies
         run: npm install
@@ -68,18 +65,17 @@ jobs:
       - name: Run tests
         run: npm test ./test/replica-set.js
         env:
-          CI: true
           MONGODB_REPLICA_SET: mongodb-test-rs
+          MONGODB_USERNAME: admin
+          MONGODB_PASSWORD: admin
 
   single-node-replica-set-on-custom-port:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [12, 14, 16]
-        mongodb-port: [23456]
-        mongodb-version: ['4.0', '4.2', '4.4']
+        mongodb-version: ['4.0', '4.2', '4.4', '5.0']
 
-    name: MongoDB v${{ matrix.mongodb-version }} RS on custom port — Node.js v${{ matrix.node-version }}
+    name: MongoDB v${{ matrix.mongodb-version }} RS on custom port
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -87,14 +83,14 @@ jobs:
       - name: Start MongoDB Server v${{ matrix.mongodb-version }}
         uses: ./
         with:
-          mongodb-port: ${{ matrix.mongodb-port }}
+          mongodb-port: 12345
           mongodb-version: ${{ matrix.mongodb-version }}
           mongodb-replica-set: mongodb-test-rs
 
-      - name: Use Node.js ${{ matrix.node-version }}
+      - name: Setup NodeJS
         uses: actions/setup-node@v1
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 16
 
       - name: Install dependencies
         run: npm install
@@ -102,6 +98,41 @@ jobs:
       - name: Run tests
         run: npm test ./test/replica-set.js
         env:
-          CI: true
-          MONGODB_PORT: ${{ matrix.mongodb-port }}
+          MONGODB_PORT: 12345
           MONGODB_REPLICA_SET: mongodb-test-rs
+
+  single-node-replica-set-on-custom-port-with-credentials:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        mongodb-version: ['4.0', '4.2', '4.4', '5.0']
+
+    name: MongoDB v${{ matrix.mongodb-version }} RS on custom port with credentials
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Start MongoDB Server v${{ matrix.mongodb-version }}
+        uses: ./
+        with:
+          mongodb-port: 12345
+          mongodb-version: ${{ matrix.mongodb-version }}
+          mongodb-replica-set: mongodb-test-rs
+          mongodb-root-username: admin
+          mongodb-root-password: admin
+
+      - name: Setup NodeJS
+        uses: actions/setup-node@v1
+        with:
+          node-version: 16
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests
+        run: npm test ./test/replica-set.js
+        env:
+          MONGODB_PORT: 12345
+          MONGODB_REPLICA_SET: mongodb-test-rs
+          MONGODB_USERNAME: admin
+          MONGODB_PASSWORD: admin
